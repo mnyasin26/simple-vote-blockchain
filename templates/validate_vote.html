@@ -1,0 +1,43 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validate Vote</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5">Validate Vote</h1>
+        <form id="validateVoteForm">
+            <div class="form-group">
+                <label for="voteData">Vote Data</label>
+                <textarea id="voteData" class="form-control" rows="10" placeholder="Paste vote data here"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Validate Vote</button>
+        </form>
+        <div class="mt-3">
+            <pre id="validationResult" class="p-3 border rounded bg-light"></pre>
+        </div>
+    </div>
+    <script>
+        document.getElementById('validateVoteForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const voteData = document.getElementById('voteData').value;
+            const response = await fetch('/validate_vote', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: voteData,
+            });
+            const data = await response.json();
+            document.getElementById('validationResult').innerHTML = `<code>${JSON.stringify(data, null, 2)}</code>`;
+        });
+    </script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

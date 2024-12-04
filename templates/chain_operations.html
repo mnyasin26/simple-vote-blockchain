@@ -1,0 +1,96 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chain Operations</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.3/socket.io.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5">Chain Operations</h1>
+        <div class="mt-3">
+            <button class="btn btn-primary" onclick="getChain()">Get Chain</button>
+            <button class="btn btn-secondary" onclick="startMining()">Mine Block</button>
+            <button class="btn btn-warning" onclick="getUnconfirmedTransactions()">Unconfirmed Transactions</button>
+        </div>
+        <form id="transactionForm" class="mt-3">
+            <div class="form-group">
+                <input type="text" id="transaction" class="form-control" placeholder="Enter transaction">
+            </div>
+            <button type="submit" class="btn btn-success">Add Transaction</button>
+        </form>
+        <div class="mt-3">
+            <button class="btn btn-info" type="button" data-toggle="collapse" data-target="#chainOutput"
+                aria-expanded="false" aria-controls="chainOutput" id="toggleChainButton">
+                Toggle Output
+            </button>
+            <div class="collapse mt-3" id="chainOutput">
+                <pre id="output" class="p-3 border rounded bg-light"></pre>
+            </div>
+        </div>
+        <div class="mt-3">
+            <h3>Mining Process</h3>
+            <pre id="miningOutput" class="p-3 border rounded bg-light"></pre>
+        </div>
+    </div>
+    <script>
+        const socket = io();
+
+        async function getChain() {
+            const response = await fetch('/chain');
+            const data = await response.json();
+            document.getElementById('output').innerHTML = `<code>${JSON.stringify(data, null, 2)}</code>`;
+            const chainOutput = document.getElementById('chainOutput');
+            if (!chainOutput.classList.contains('show')) {
+                document.getElementById('toggleChainButton').click();
+            }
+        }
+
+        async function getUnconfirmedTransactions() {
+            const response = await fetch('/unconfirmed_transactions');
+            const data = await response.json();
+            document.getElementById('output').innerHTML = `<code>${JSON.stringify(data, null, 2)}</code>`;
+            const chainOutput = document.getElementById('chainOutput');
+            if (!chainOutput.classList.contains('show')) {
+                document.getElementById('toggleChainButton').click();
+            }
+        }
+
+        async function startMining() {
+            document.getElementById('miningOutput').innerHTML = '';
+            socket.emit('start_mining');
+        }
+
+        socket.on('mining_update', (data) => {
+            document.getElementById('miningOutput').innerHTML = `Nonce: ${data.nonce}\nHash: ${data.hash}`;
+        });
+
+        socket.on('mining_complete', (data) => {
+            document.getElementById('miningOutput').innerHTML += `\n\n${data.message}\nTime taken: ${data.time_taken} seconds\nFinal Hash: ${data.hash}`;
+        });
+
+        document.getElementById('transactionForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const transaction = document.getElementById('transaction').value;
+            const response = await fetch('/add_transaction', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ transaction }),
+            });
+            const data = await response.json();
+            document.getElementById('output').innerHTML = `<code>${JSON.stringify(data, null, 2)}</code>`;
+            if (!chainOutput.classList.contains('show')) {
+                document.getElementById('toggleChainButton').click();
+            }
+        });
+    </script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
